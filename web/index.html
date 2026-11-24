@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why Actions</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Why Actions: <span id="org"></span></h1>
+      <p class="sub" id="sub"></p>
+    </div>
+    <div class="filters">
+      <label>Repo <select id="f-repo"></select></label>
+      <label>Range
+        <select id="f-range">
+          <option value="all">All data</option>
+          <option value="180">Last 180 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+      </label>
+      <label>Bucket
+        <select id="f-bucket">
+          <option value="week">Week</option>
+          <option value="month">Month</option>
+          <option value="day">Day</option>
+        </select>
+      </label>
+      <label>Measure
+        <select id="f-measure">
+          <option value="min">Billed minutes</option>
+          <option value="runs">Runs</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <section class="kpis" id="kpis"></section>
+
+    <section class="card">
+      <h2>Why: usage by cause over time</h2>
+      <p class="note">Every run gets one cause (re-run attempts are split out). Hover a bar for the breakdown.</p>
+      <div class="chart tall"><canvas id="c-cause-time"></canvas></div>
+      <div class="legend" id="cause-legend"></div>
+    </section>
+
+    <div class="grid2">
+      <section class="card">
+        <h2>Cause totals</h2>
+        <div id="cause-table"></div>
+      </section>
+      <section class="card">
+        <h2>Avoidable share over time</h2>
+        <p class="note">Share of usage from cascades, re-runs and duplicate-commit runs.</p>
+        <div class="chart"><canvas id="c-avoidable"></canvas></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Usage vs. PR count</h2>
+      <p class="note">PRs opened per bucket, and usage per PR opened in that bucket. Two charts, same x-axis. The last bucket is still in progress, so its ratio runs high.</p>
+      <div class="grid2">
+        <div class="chart"><canvas id="c-prs"></canvas></div>
+        <div class="chart"><canvas id="c-per-pr"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card" id="repo-section">
+      <h2>Repos</h2>
+      <p class="note">Click a repo to focus the whole page on it.</p>
+      <div class="grid2">
+        <div class="chart"><canvas id="c-repo-scatter"></canvas></div>
+        <div class="tablewrap" id="repo-table"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Same actions, again and again</h2>
+      <p class="note">For each PR × workflow, how many times did it run? Bars show how much usage sits in each bucket.</p>
+      <div class="grid2">
+        <div class="chart"><canvas id="c-repeat"></canvas></div>
+        <div id="repeat-stats"></div>
+      </div>
+      <h3>PRs with the most runs</h3>
+      <div class="tablewrap" id="pr-table"></div>
+    </section>
+
+    <section class="card">
+      <h2>Stacked-PR cascades</h2>
+      <p class="note">A burst is one person's push touching CI on several PRs within 2 minutes. When the PRs are linked by base branch (or 3+ PRs move at once), every PR other than the lowest in the stack counts as cascade.</p>
+      <div class="kpis small" id="cascade-kpis"></div>
+      <div class="chart"><canvas id="c-cascade-time"></canvas></div>
+      <h3>Largest bursts</h3>
+      <div class="tablewrap" id="burst-table"></div>
+    </section>
+
+    <section class="card">
+      <h2>Workflows</h2>
+      <div class="tablewrap" id="wf-table"></div>
+    </section>
+
+    <details class="card method">
+      <summary>How this is computed</summary>
+      <ul>
+        <li><b>Billed minutes</b>: each job's duration rounded up to a whole minute, ×2 for Windows and ×10 for macOS runners, self-hosted counted as 0. This approximates GitHub billing; public repos are not billed at all.</li>
+        <li><b>Re-run attempt</b>: jobs from attempt 2+ of a run, counted separately from the run's original cause.</li>
+        <li><b>Same commit again</b>: the same workflow already ran on the same SHA earlier (for example a push and a pull_request event for one commit).</li>
+        <li><b>Stacked-PR cascade</b>: see the cascade section. Stacks come from PR base branches, including earlier bases that were later retargeted.</li>
+        <li><b>PR: first run / new commits</b>: the first run of a workflow for a PR, and every later one.</li>
+        <li>Runs are matched to PRs from the run's PR list, or by head branch while the PR was open.</li>
+      </ul>
+    </details>
+  </main>
+  <div id="tooltip" class="tooltip" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

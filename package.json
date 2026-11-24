@@ -1,0 +1,13 @@
+{
+  "name": "why-actions",
+  "version": "0.1.0",
+  "description": "Explain where a GitHub org's Actions minutes go: causes, PRs, re-runs, stacked-PR cascades.",
+  "type": "module",
+  "bin": {
+    "why-actions": "bin/why-actions.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
